@@ -65,7 +65,7 @@ def login(request):
 
 @login_required(login_url='/')
 def home(request):
-    notifications = Notification.objects.all()
+    notifications = Notification.objects.order_by('-send_at')
     number_of_notifications = len(notifications)
 
     context = {
@@ -78,7 +78,7 @@ def home(request):
 
 @login_required(login_url='/')
 def notifications(request):
-    notifications = Notification.objects.all().order_by('-send_at')
+    notifications = Notification.objects.order_by('-send_at')
     number_of_notifications = len(notifications)
 
     print(number_of_notifications)
@@ -109,7 +109,7 @@ def add_notification(request):
 @login_required(login_url='/')
 def notification_detail(request, id):
     notification = Notification.objects.get(id=id)
-    notifications = Notification.objects.all()
+    notifications = Notification.objects.order_by('-send_at')
     context = {
         "notification": notification,
         "notifications": notifications
