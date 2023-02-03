@@ -1,0 +1,27 @@
+{% extends 'base.html' %} 
+{% block content %}  
+<div class="main-panel">
+    <div class="content-wrapper">
+      <div class="row">
+        <div class="col-md-6 d-flex align-items-stretch">
+            <div class="row">
+            <div class="col-md-12 grid-margin stretch-card">
+                <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Message</h4>
+                    <p class="card-description">
+                    Sent by: {{ notification.sender.username }} at {{ notification.send_at }}
+                    </p>
+                    <p>
+                    {{notification.message}},
+                    </p>
+                </div>
+                </div>
+            </div>
+            
+            </div>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock content %}
