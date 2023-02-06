@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.db import transaction
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as user_login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -72,7 +73,8 @@ def home(request):
     else:
         notifications = Notification.objects.order_by('-send_at').filter(receiver=request.user)
 
-    number_of_notifications = len(notifications)
+    number_of_unread = NotificationStatus.objects.filter(status='unread', user=request.user)
+    number_of_notifications = len(number_of_unread)
 
     context = {
         "notifications": notifications,
@@ -95,11 +97,14 @@ def notifications(request):
     else:
         notifications = Notification.objects.order_by('-send_at').filter(receiver=request.user)
 
-    number_of_notifications = len(notifications)
+    notification_status = NotificationStatus.objects.filter(status='unread', user=request.user)
+    number_of_notifications = len(notification_status)
 
+    
     context = {
         "notifications": notifications,
-        "number_of_notifications": number_of_notifications
+        "number_of_notifications": number_of_notifications,
+        "notification_status": notification_status
     }
     return render(request, 'notifications/notifications.html', context)
 
@@ -111,50 +116,60 @@ def add_notification(request):
     users = User.objects.all()
 
     if request.method == 'POST':
-        sender = request.user
-        message = request.POST['message']
-        receiver_usernames = request.POST.getlist('receiver')
+        with transaction.atomic():
+            sender = request.user
+            message = request.POST['message']
+            receiver_usernames = request.POST.getlist('receiver')
 
-        #print(receiver_usernames)
+            #print(receiver_usernames)
 
-        receivers = []
+            receivers = []
 
-        if receiver_usernames == ['all']:
-            users = User.objects.all()
+            if receiver_usernames == ['all']:
+                users = User.objects.all()
 
-            for user in users:
-                receiver = user
-                receivers.append(receiver)
-        
-        elif receiver_usernames == ['customers']:
-            customers = User.objects.filter(user_type='customer')
+                for user in users:
+                    receiver = user
+                    receivers.append(receiver)
+            
+            elif receiver_usernames == ['customers']:
+                customers = User.objects.filter(user_type='customer')
 
-            for customer in customers:
-                receiver = customer
-                receivers.append(receiver)
+                for customer in customers:
+                    receiver = customer
+                    receivers.append(receiver)
 
-        elif receiver_usernames == ['cashiers']:
-            employees = User.objects.filter(user_type='cashier')
+            elif receiver_usernames == ['cashiers']:
+                employees = User.objects.filter(user_type='cashier')
 
-            for employee in employees:
-                receiver = employee
-                receivers.append(receiver)
+                for employee in employees:
+                    receiver = employee
+                    receivers.append(receiver)
 
-        else:
-            for receiver_username in receiver_usernames:
-                receiver = User.objects.get(username=receiver_username)
-                #print(receiver)
-                receivers.append(receiver)  
-        
-        print(receivers)
-        notification = Notification.objects.create(sender=sender, message=message)
-        notification.receiver.set(receivers)
-        notification.save()
+            else:
+                for receiver_username in receiver_usernames:
+                    receiver = User.objects.get(username=receiver_username)
+                    #print(receiver)
+                    receivers.append(receiver)  
+            
+            #print(receiver)
+            notification = Notification.objects.create(sender=sender, message=message)
+            notification.receiver.set(receivers)
+
+            for receiver_users in receivers:
+                notification_status = NotificationStatus.objects.create(notification=notification, user=receiver_users)
+                notification_status.save()
+
+            notification.save()
 
         return redirect('home')
 
+    notification_status = NotificationStatus.objects.filter(status='unread', user=request.user)
+    number_of_notifications = len(notification_status)
+
     context = {
-        "users": users
+        "users": users,
+        
     }
 
     return render(request, 'notifications/create_notification.html', context)
@@ -163,6 +178,11 @@ def add_notification(request):
 @login_required(login_url='/')
 def notification_detail(request, id):
     notification = Notification.objects.get(id=id)
+    notification_status = NotificationStatus.objects.get(notification=notification, user=request.user)
+
+    notification_status.status = 'read'
+    notification_status.save()
+
     logged_in = User.objects.get(id=request.user.id)
 
     if logged_in.is_staff == True:
@@ -171,7 +191,9 @@ def notification_detail(request, id):
     else:
         notifications = Notification.objects.order_by('-send_at').filter(receiver=request.user)
 
-    number_of_notifications = len(notifications)
+    
+    number_of_unread = NotificationStatus.objects.filter(status='unread', user=request.user)
+    number_of_notifications = len(number_of_unread)
 
     context = {
         "notification": notification,

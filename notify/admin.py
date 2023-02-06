@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import *
 # Register your models here.
 admin.site.register(Notification)
+admin.site.register(NotificationStatus)
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):

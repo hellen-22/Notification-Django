@@ -39,7 +39,7 @@
                       <td>{{ notification.send_at}}</td>
                       
                       <td>
-                        <a href="{% url 'notification_detail' notification.id %}" class="btn btn-success">View</a>
+                        <a href="{% url 'notification_detail' notification.id %}" class="btn btn-success" type="submit">View</a>
                       </td>
                       {% if user.is_staff %}
                       <td>
