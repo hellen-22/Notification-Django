@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect
-from django.db.models import Count
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as user_login, logout
