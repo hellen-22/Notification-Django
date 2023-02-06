@@ -1,5 +1,6 @@
 {% extends 'base.html' %} 
 {% block content %}
+{% load crispy_forms_tags %}
 <div class="main-panel">        
   <div class="content-wrapper">
     <div class="row">
@@ -9,6 +10,18 @@
             <h4 class="card-title">Send Notification</h4>
             <form method="POST">
               {% csrf_token %}
+              
+              <div class="form-group">
+                <select class="form-control form-control-lg selectpicker" id="receiver" name="receiver" multiple>
+                  <option value="all">All</option>
+                  {% for user in users %}         
+                  <option value="{{user}}">{{user}}</option>
+                  {% endfor %}
+                  <option value="customers">Customers</option>
+                  <option value="cashiers">Cashiers</option>
+              
+                </select>
+              </div>
               <div class="form-group">
                 <label>Message</label>
                 <textarea type="text" class="form-control form-control-lg" placeholder="Message" aria-label="Message" id="message" name='message' required></textarea>

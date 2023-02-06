@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as user_login, logout
@@ -64,7 +64,14 @@ def login(request):
 
 @login_required(login_url='/')
 def home(request):
-    notifications = Notification.objects.order_by('-send_at')
+    logged_in = User.objects.get(id=request.user.id)
+
+    if logged_in.is_staff == True:
+        notifications = Notification.objects.order_by('-send_at')
+
+    else:
+        notifications = Notification.objects.order_by('-send_at').filter(receiver=request.user)
+
     number_of_notifications = len(notifications)
 
     context = {
@@ -77,10 +84,18 @@ def home(request):
 
 @login_required(login_url='/')
 def notifications(request):
-    notifications = Notification.objects.order_by('-send_at')
-    number_of_notifications = len(notifications)
+    logged_in = User.objects.get(id=request.user.id)
 
-    print(number_of_notifications)
+    if logged_in.is_staff == True:
+        notifications = Notification.objects.order_by('-send_at')
+
+        for notification in Notification.objects.all():
+            print(notification.receiver.all())
+
+    else:
+        notifications = Notification.objects.order_by('-send_at').filter(receiver=request.user)
+
+    number_of_notifications = len(notifications)
 
     context = {
         "notifications": notifications,
@@ -98,20 +113,70 @@ def add_notification(request):
     if request.method == 'POST':
         sender = request.user
         message = request.POST['message']
+        receiver_usernames = request.POST.getlist('receiver')
 
-        Notification.objects.create(sender=sender, message=message)
+        #print(receiver_usernames)
+
+        receivers = []
+
+        if receiver_usernames == ['all']:
+            users = User.objects.all()
+
+            for user in users:
+                receiver = user
+                receivers.append(receiver)
+        
+        elif receiver_usernames == ['customers']:
+            customers = User.objects.filter(user_type='customer')
+
+            for customer in customers:
+                receiver = customer
+                receivers.append(receiver)
+
+        elif receiver_usernames == ['cashiers']:
+            employees = User.objects.filter(user_type='cashier')
+
+            for employee in employees:
+                receiver = employee
+                receivers.append(receiver)
+
+        else:
+            for receiver_username in receiver_usernames:
+                receiver = User.objects.get(username=receiver_username)
+                #print(receiver)
+                receivers.append(receiver)  
+        
+        print(receivers)
+        notification = Notification.objects.create(sender=sender, message=message)
+        notification.receiver.set(receivers)
+        notification.save()
+
         return redirect('home')
 
-    return render(request, 'notifications/create_notification.html')
+    context = {
+        "users": users
+    }
+
+    return render(request, 'notifications/create_notification.html', context)
 
 
 @login_required(login_url='/')
 def notification_detail(request, id):
     notification = Notification.objects.get(id=id)
-    notifications = Notification.objects.order_by('-send_at')
+    logged_in = User.objects.get(id=request.user.id)
+
+    if logged_in.is_staff == True:
+        notifications = Notification.objects.order_by('-send_at')
+
+    else:
+        notifications = Notification.objects.order_by('-send_at').filter(receiver=request.user)
+
+    number_of_notifications = len(notifications)
+
     context = {
         "notification": notification,
-        "notifications": notifications
+        "notifications": notifications,
+        "number_of_notifications": number_of_notifications
     }
     return render(request, "notifications/notification_detail.html", context)
 
