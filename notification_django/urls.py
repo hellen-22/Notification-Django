@@ -18,5 +18,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('notify.urls'))
+    path('', include('notify.urls')),
+    path('mpesa-payment/', include('mpesa_payment.urls'))
 ]

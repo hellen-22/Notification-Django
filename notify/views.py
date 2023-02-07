@@ -73,11 +73,19 @@ def home(request):
     else:
         notifications = Notification.objects.order_by('-send_at').filter(receiver=request.user)
 
-    number_of_unread = NotificationStatus.objects.filter(status='unread', user=request.user)
-    number_of_notifications = len(number_of_unread)
+    notification_status = NotificationStatus.objects.filter(status='unread', user=request.user)
+    number_of_notifications = len(notification_status)
+
+    notids = []
+    for notid in notification_status.values():
+        notids.append(notid['notification_id'])
+    
+
+    unread_notifications = Notification.objects.filter(id__in=notids)
 
     context = {
         "notifications": notifications,
+        "unread_notifications": unread_notifications,
         "number_of_notifications": number_of_notifications
     }
 
@@ -91,21 +99,24 @@ def notifications(request):
     if logged_in.is_staff == True:
         notifications = Notification.objects.order_by('-send_at')
 
-        for notification in Notification.objects.all():
-            print(notification.receiver.all())
-
     else:
         notifications = Notification.objects.order_by('-send_at').filter(receiver=request.user)
 
     notification_status = NotificationStatus.objects.filter(status='unread', user=request.user)
     number_of_notifications = len(notification_status)
 
-    print(list(notification_status.values()))
+    notids = []
+    for notid in notification_status.values():
+        notids.append(notid['notification_id'])
     
+
+    unread_notifications = Notification.objects.filter(id__in=notids)
+
     context = {
         "notifications": notifications,
+        "unread_notifications": unread_notifications,
         "number_of_notifications": number_of_notifications,
-        
+        "notification_status": notification_status
     }
     return render(request, 'notifications/notifications.html', context)
 
@@ -170,7 +181,7 @@ def add_notification(request):
 
     context = {
         "users": users,
-        
+        "number_of_notifications": number_of_notifications
     }
 
     return render(request, 'notifications/create_notification.html', context)
@@ -196,9 +207,17 @@ def notification_detail(request, id):
     number_of_unread = NotificationStatus.objects.filter(status='unread', user=request.user)
     number_of_notifications = len(number_of_unread)
 
+    notids = []
+    for notid in number_of_unread.values():
+        notids.append(notid['notification_id'])
+    
+
+    unread_notifications = Notification.objects.filter(id__in=notids)
+    
     context = {
         "notification": notification,
         "notifications": notifications,
+        "unread_notifications": unread_notifications,
         "number_of_notifications": number_of_notifications
     }
     return render(request, "notifications/notification_detail.html", context)

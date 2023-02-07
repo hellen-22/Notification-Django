@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import environ
+
+env = environ.Env(DEBUG=(bool, False))
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'crispy_forms',
+    'django_daraja',
 
     'notify',
     'mpesa_payment'
@@ -134,3 +139,24 @@ LOGIN_REDIRECT_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
 
 AUTH_USER_MODEL = 'notify.User'
+
+
+MPESA_CONFIG = {
+     'CONSUMER_KEY': 'SuRXlrlXPHcqCAvqWnqWO4zQ4rQ6ImHT', 
+     'CONSUMER_SECRET': 'UyIH5o7OWTO4TV5R', 
+     'HOST_NAME': '', 
+     'PASS_KEY': '', 
+     'SAFARICOM_API': 'https://sandbox.safaricom.co.ke', 
+     'SHORT_CODE': '174379'
+
+}
+
+MPESA_ENVIRONMENT = 'sandbox'
+MPESA_CONSUMER_KEY = 'SuRXlrlXPHcqCAvqWnqWO4zQ4rQ6ImHT'
+MPESA_CONSUMER_SECRET = 'UyIH5o7OWTO4TV5R'
+MPESA_SHORTCODE = '174379'
+MPESA_EXPRESS_SHORTCODE = '174379'
+MPESA_SHORTCODE_TYPE = 'paybill'
+MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
+MPESA_INITIATOR_USERNAME = 'testapi'
+MPESA_INITIATOR_SECURITY_CREDENTIAL = 'Safaricom999!*!'

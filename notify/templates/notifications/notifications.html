@@ -24,6 +24,7 @@
                       <th>Sender</th>
                       <th>Message</th>
                       <th>Date and Time</th>
+                      
                       {% if user.is_staff %}
                       <th colspan="3">Actions</th>
                       {% endif %}
@@ -37,7 +38,6 @@
                       <td>{{ notification.sender.username }}</td>
                       <td>{{ notification.message }}</td>
                       <td>{{ notification.send_at}}</td>
-                      
                       <td>
                         <a href="{% url 'notification_detail' notification.id %}" class="btn btn-success" type="submit">View</a>
                       </td>
