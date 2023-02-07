@@ -100,11 +100,12 @@ def notifications(request):
     notification_status = NotificationStatus.objects.filter(status='unread', user=request.user)
     number_of_notifications = len(notification_status)
 
+    print(list(notification_status.values()))
     
     context = {
         "notifications": notifications,
         "number_of_notifications": number_of_notifications,
-        "notification_status": notification_status
+        
     }
     return render(request, 'notifications/notifications.html', context)
 

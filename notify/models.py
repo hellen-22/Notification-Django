@@ -35,7 +35,7 @@ class Notification(models.Model):
         return reverse('notifications')
 
 class NotificationStatus(models.Model):
-    notification = models.ForeignKey(Notification, on_delete=models.CASCADE)
+    notification = models.ForeignKey(Notification, on_delete=models.CASCADE, related_name='notification')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=255, choices=NOTIFICATION_STATUS_CHOICES, default='unread')
 
