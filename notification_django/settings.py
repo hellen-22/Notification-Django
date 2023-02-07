@@ -40,7 +40,8 @@ INSTALLED_APPS = [
 
     'crispy_forms',
 
-    'notify'
+    'notify',
+    'mpesa_payment'
 ]
 
 MIDDLEWARE = [
