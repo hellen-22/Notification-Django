@@ -13,15 +13,18 @@ NOTIFICATION_STATUS_CHOICES = (
     ('unread', 'unread')
 )
 # Create your models here.
+
+
+#Creating a custom user so as to ad the usertype field
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    user_type = models.CharField(max_length=255, choices=USER_TYPE_CHOICES, default='employee')
+    user_type = models.CharField(max_length=255, choices=USER_TYPE_CHOICES, default='customer')
 
 
     def __str__(self) -> str:
         return self.username
 
-
+#Notification table to store notification
 class Notification(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender')
     receiver = models.ManyToManyField(User, related_name='receiver')
@@ -34,6 +37,7 @@ class Notification(models.Model):
     def get_absolute_url(self):
         return reverse('notifications')
 
+#For storing notification of individdual users and the status of their notification.
 class NotificationStatus(models.Model):
     notification = models.ForeignKey(Notification, on_delete=models.CASCADE, related_name='notification')
     user = models.ForeignKey(User, on_delete=models.CASCADE)

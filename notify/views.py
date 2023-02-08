@@ -65,28 +65,33 @@ def login(request):
 
 @login_required(login_url='/')
 def home(request):
+    #Checks for the logged in user
     logged_in = User.objects.get(id=request.user.id)
 
+    #If the logged in user is admin then display all the notifications and order by the date sent.
     if logged_in.is_staff == True:
         notifications = Notification.objects.order_by('-send_at')
 
+    #If it is not admin display notifications for that specific user
     else:
         notifications = Notification.objects.order_by('-send_at').filter(receiver=request.user)
 
+    #Check for the status of notification for a specific user, the logged in user, and count the notifications that are unread
     notification_status = NotificationStatus.objects.filter(status='unread', user=request.user)
-    number_of_notifications = len(notification_status)
+    number_of_unread_notifications = len(notification_status)
 
+    #Check for the notification ids of the notifications that are unread
     notids = []
     for notid in notification_status.values():
         notids.append(notid['notification_id'])
     
-
+    #Filter out the unread ones so that they can be displayed as the unread notifications.
     unread_notifications = Notification.objects.filter(id__in=notids)
 
     context = {
         "notifications": notifications,
         "unread_notifications": unread_notifications,
-        "number_of_notifications": number_of_notifications
+        "number_of_notifications": number_of_unread_notifications
     }
 
     return render(request, 'home.html', context)
@@ -128,6 +133,7 @@ def add_notification(request):
     users = User.objects.all()
 
     if request.method == 'POST':
+        #Creating Notification and Notification Status at the same time.
         with transaction.atomic():
             sender = request.user
             message = request.POST['message']
@@ -135,8 +141,9 @@ def add_notification(request):
 
             #print(receiver_usernames)
 
+            #List of notifications receivers
             receivers = []
-
+            #If the selected receivers is all, then send message to every user
             if receiver_usernames == ['all']:
                 users = User.objects.all()
 
@@ -144,6 +151,7 @@ def add_notification(request):
                     receiver = user
                     receivers.append(receiver)
             
+            #If the selected receivers is customers, then send message to every user with a usertype of customer
             elif receiver_usernames == ['customers']:
                 customers = User.objects.filter(user_type='customer')
 
@@ -151,6 +159,7 @@ def add_notification(request):
                     receiver = customer
                     receivers.append(receiver)
 
+            #If the selected receivers is cashiers, then send message to every user with a usertype of cashier
             elif receiver_usernames == ['cashiers']:
                 employees = User.objects.filter(user_type='cashier')
 
@@ -158,6 +167,7 @@ def add_notification(request):
                     receiver = employee
                     receivers.append(receiver)
 
+            #Send notification to the specific selected individuals
             else:
                 for receiver_username in receiver_usernames:
                     receiver = User.objects.get(username=receiver_username)
@@ -165,9 +175,11 @@ def add_notification(request):
                     receivers.append(receiver)  
             
             #print(receiver)
+            #Create Notification instance using the sender as the logged in user and the message.
             notification = Notification.objects.create(sender=sender, message=message)
             notification.receiver.set(receivers)
 
+            #Create Notification status instance using the notification that was just created and the receivers in the receivers list.
             for receiver_users in receivers:
                 notification_status = NotificationStatus.objects.create(notification=notification, user=receiver_users)
                 notification_status.save()
@@ -192,6 +204,7 @@ def notification_detail(request, id):
     notification = Notification.objects.get(id=id)
     notification_status = NotificationStatus.objects.get(notification=notification, user=request.user)
 
+    #Updating notification status to read once it's details is viewed
     notification_status.status = 'read'
     notification_status.save()
 
