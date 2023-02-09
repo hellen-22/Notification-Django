@@ -29,7 +29,8 @@ SECRET_KEY = 'django-insecure-oyq*6=%b-1d9srj*e$j61!qw1nbd5s144exq5oxh3(nzmgm-^^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
@@ -152,8 +153,8 @@ MPESA_CONFIG = {
 }
 
 MPESA_ENVIRONMENT = 'sandbox'
-MPESA_CONSUMER_KEY = 'SuRXlrlXPHcqCAvqWnqWO4zQ4rQ6ImHT'
-MPESA_CONSUMER_SECRET = 'UyIH5o7OWTO4TV5R'
+MPESA_CONSUMER_KEY = 'GzqYRsmwDQTIL6NWQgA7gmgA1cu9JYqw'
+MPESA_CONSUMER_SECRET = '4myh1Ncn6fazaaFA'
 MPESA_SHORTCODE = '174379'
 MPESA_EXPRESS_SHORTCODE = '174379'
 MPESA_SHORTCODE_TYPE = 'paybill'
