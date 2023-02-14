@@ -6,44 +6,19 @@ import requests
 
 from datetime import datetime
 from requests.auth import HTTPBasicAuth
-from requests import Response
+from rest_framework.response import Response
 from phonenumber_field.phonenumber import PhoneNumber
 
 from notification_django.settings import env
-from .models import Transactions
+from .models import *
 from .exceptions import *
-from .validators import *
-#from .serializers import TransactionSerializer
 
 logging = logging.getLogger("default")
 
 now = datetime.now()
 
-class MpesaResponse(Response):
-	response_description = ""
-	error_code = None
-	error_message = ''
-
-
-def mpesa_response(r):
-	"""
-	Create MpesaResponse object from requests.Response object
-	
-	Arguments:
-		r (requests.Response) -- The response to convert
-	"""
-
-	r.__class__ = MpesaResponse
-	json_response = r.json()
-	r.response_description = json_response.get('ResponseDescription', '')
-	r.error_code = json_response.get('errorCode')
-	r.error_message = json_response.get('errorMessage', '')
-	return r
-
-
-
 class MpesaGateWay:
-    business_short_code = None
+    business_shortcode = None
     consumer_key = None
     consumer_secret = None
     access_token_url = None
@@ -55,7 +30,7 @@ class MpesaGateWay:
 
     def __init__(self):
         now = datetime.now()
-        self.business_short_code = env("business_short_code")
+        self.business_shortcode = env("business_shortcode")
         self.consumer_key = env("consumer_key")
         self.consumer_secret = env("consumer_secret")
         self.access_token_url = env("access_token_url")
@@ -71,7 +46,7 @@ class MpesaGateWay:
         except Exception as e:
             logging.error("Error {}".format(e))
         else:
-            self.access_token_expiration = time.time() + 34000000000545667856343556667
+            self.access_token_expiration = time.time() + 340000000000000000
 
     def getAccessToken(self):
         try:
@@ -82,7 +57,7 @@ class MpesaGateWay:
             raise err
         else:
             token = res.json()["access_token"]
-            self.headers = {"Authorization": "Bearer %s" % token, "Content-type":"application/json"}
+            self.headers = {"Authorization": "Bearer %s" % token}
             return token
 
     class Decorators:
@@ -100,60 +75,54 @@ class MpesaGateWay:
     def generate_password(self):
         """Generates mpesa api password using the provided shortcode and passkey"""
         self.timestamp = now.strftime("%Y%m%d%H%M%S")
-        password_str = "174379" + env("pass_key") + self.timestamp
+        password_str = env("business_shortcode") + env("pass_key") + self.timestamp
         password_bytes = password_str.encode("ascii")
         return base64.b64encode(password_bytes).decode("utf-8")
 
     @Decorators.refreshToken
-    def stk_push_request(self, business_short_code, phone_number, amount, account_reference, transaction_desc, callback_url):
-
+    def stk_push(self, phone_number, amount, callback_url, account_reference, transaction_desc):
         if str(account_reference).strip() == '':
             raise MpesaInvalidParameterException('Account reference cannot be blank')
-        
         if str(transaction_desc).strip() == '':
             raise MpesaInvalidParameterException('Transaction description cannot be blank')
-
         if not isinstance(amount, int):
             raise MpesaInvalidParameterException('Amount must be an integer')
 
-        mpesa_environment = env('mpesa_environment')
-
         
-
+        phone_number = phone_number
+        business_shortcode = self.business_shortcode
+        timestamp = self.timestamp
+        password = self.password
+        
         req_data = {
-            "BusinessShortCode": business_short_code,
-            "Password": base64.b64encode((str(business_short_code) + env('pass_key') + self.timestamp).encode('ascii')).decode('utf-8'),
-            "Timestamp": self.timestamp,
+            "BusinessShortCode": business_shortcode,
+            "Password": password,
+            "Timestamp": timestamp,
             "TransactionType": "CustomerPayBillOnline",
             "Amount": amount,
             "PartyA": phone_number,
-            "PartyB": business_short_code,
+            "PartyB": business_shortcode,
             "PhoneNumber": phone_number,
             "CallBackURL": callback_url,
             "AccountReference": account_reference,
             "TransactionDesc": transaction_desc,
         }
+
+        res = requests.post(self.checkout_url, json=req_data, headers=self.headers, timeout=30)
+        print(self.headers)
+        res_data = res.json()
         
-        try:
-            res_data = requests.post(self.checkout_url, json=req_data, headers=self.headers)
-            #response = mpesa_response(res_data)
-            response = res_data.json()
-            print(self.headers)
-            return response
-        except requests.exceptions.ConnectionError:
-            raise MpesaConnectionError('Connection failed')
-        except Exception as ex:
-            raise MpesaConnectionError(str(ex))
-        
-        
-        """
+        return res_data
+    """
+        logging.info("Mpesa request data {}".format(req_data))
+        logging.info("Mpesa response info {}".format(res_data))
+
         if res.ok:
             data["checkout_request_id"] = res_data["CheckoutRequestID"]
 
             Transaction.objects.create(**data)
-        
-        
-        
+        print(self.headers)
+        return res_data
     
     def check_status(self, data):
         try:
@@ -163,7 +132,6 @@ class MpesaGateWay:
             status = 1
         return status
 
-    
     def get_transaction_object(data):
         checkout_request_id = data["Body"]["stkCallback"]["CheckoutRequestID"]
         transaction, _ = Transaction.objects.get_or_create(
@@ -206,4 +174,4 @@ class MpesaGateWay:
 
         return Response({"status": "ok", "code": 0}, status=200)
 
-    """
+        """

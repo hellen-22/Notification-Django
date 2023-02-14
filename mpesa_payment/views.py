@@ -2,6 +2,9 @@ import requests
 import json
 
 from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.http import HttpResponse
 from django_daraja.mpesa.core import MpesaClient
@@ -17,10 +20,11 @@ def mpesa_payment(request):
     if request.method == 'POST':
         phone_number = request.POST['phone_number']
         amount = int(request.POST['amount'])
-        business_short_code = 174379
         account_reference = 'Reference'
         transaction_desc = 'Description'
-        callback_url = 'https://9ffd-41-90-68-152.in.ngrok.io/mpesa-payment/response'
+        callback_url = request.build_absolute_uri(reverse('callback'))
+
+        print(callback_url)
 
         if phone_number[0] == "+":
             phone_number = phone_number[1:]
@@ -36,25 +40,45 @@ def mpesa_payment(request):
             messages.info(request, 'Amount should be greater that 0')
             return redirect('mpesa')
 
-        response = cl.stk_push_request(business_short_code=business_short_code, phone_number=int(phone_number), amount=amount, account_reference=account_reference, transaction_desc=transaction_desc, callback_url=callback_url)
+        response = cl.stk_push(phone_number=phone_number, amount=amount, account_reference=account_reference, transaction_desc=transaction_desc, callback_url=callback_url)
 
+        print(response)
         
         #transactions = Transactions.objects.create(checkout_request_id=checkout_request_id)
         
-        return redirect('response_data')
+        return HttpResponse(response)
+
 
     else:
         return render(request, 'mpesa.html')
 
+@csrf_exempt
+def stk_push_callback(request):
+    body_unicode = request.body.decode('utf-8')
+    #body_ = request.body
 
-def response_view(request):
-    data = json.loads(request.body.decode('utf-8'))
+    if body_unicode == '':
+        return HttpResponse('No response')
+       
+    else:
+        body = json.loads(body_unicode)
+        print(body)
+        if body['Body']['stkCallback']['ResultCode'] == 0:
+            payment = Transactions(
+                checkout_request_id = body['Body']['stkCallback']['CheckoutRequestID'],
+                merchant_request_id = body['Body']['stkCallback']['MerchantRequestID'],
+                amount = body['Body']['stkCallback']['CallbackMetadata']['Item'][0]["Value"],
+                mpesa_receipt_no = body['Body']['stkCallback']['CallbackMetadata']['Item'][1]["Value"],
+                phone_number = body['Body']['stkCallback']['CallbackMetadata']['Item'][-1]["Value"],
+            )
+            payment.save()
+            messages.success(request, 'Successfully Paid')
+            return HttpResponse(body)  
+        else:
+            messages.error(request, 'Transaction Declined By User')
+            
+    return HttpResponse()
 
-    return HttpResponse(data)
-
-def response_data(request):
-    payload = requests.get('https://9ffd-41-90-68-152.in.ngrok.io/mpesa-payment/response')
-    print(payload)
-
-    return HttpResponse('PAYLOAD')
-
+def method_test(request):
+    print(f'This is {request.method}')
+    return HttpResponse('This is method test')
