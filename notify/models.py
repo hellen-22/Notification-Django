@@ -37,7 +37,7 @@ class Notification(models.Model):
     def get_absolute_url(self):
         return reverse('notifications')
 
-#For storing notification of individdual users and the status of their notification.
+#For storing notification of individual users and the status of their notification.
 class NotificationStatus(models.Model):
     notification = models.ForeignKey(Notification, on_delete=models.CASCADE, related_name='notification')
     user = models.ForeignKey(User, on_delete=models.CASCADE)

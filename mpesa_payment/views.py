@@ -15,6 +15,7 @@ from .validators import *
 from .models import *
 
 cl = MpesaGateWay()
+#cl = MpesaClient()
 
 def mpesa_payment(request):
     if request.method == 'POST':
@@ -54,6 +55,7 @@ def mpesa_payment(request):
 
 @csrf_exempt
 def stk_push_callback(request):
+    print(f'This is request{request}')
     body_unicode = request.body.decode('utf-8')
     #body_ = request.body
 
