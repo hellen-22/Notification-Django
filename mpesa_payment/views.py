@@ -1,13 +1,10 @@
-import requests
 import json
 
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.http import HttpResponse
-from django_daraja.mpesa.core import MpesaClient
 from .utils import MpesaGateWay
 from .validators import *
 
@@ -15,7 +12,6 @@ from .validators import *
 from .models import *
 
 cl = MpesaGateWay()
-#cl = MpesaClient()
 
 def mpesa_payment(request):
     if request.method == 'POST':
@@ -43,9 +39,7 @@ def mpesa_payment(request):
 
         response = cl.stk_push(phone_number=phone_number, amount=amount, account_reference=account_reference, transaction_desc=transaction_desc, callback_url=callback_url)
 
-        print(response)
         
-        #transactions = Transactions.objects.create(checkout_request_id=checkout_request_id)
         
         return HttpResponse(response)
 
@@ -55,9 +49,8 @@ def mpesa_payment(request):
 
 @csrf_exempt
 def stk_push_callback(request):
-    print(f'This is request{request}')
     body_unicode = request.body.decode('utf-8')
-    #body_ = request.body
+    
 
     if body_unicode == '':
         return HttpResponse('No response')
