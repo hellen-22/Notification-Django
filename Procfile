@@ -1,1 +1,1 @@
-web: gunicorn 'notification_django.wsgi'
+web: python manage.py migrate && gunicorn <notification_django>.wsgi
