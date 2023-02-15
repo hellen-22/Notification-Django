@@ -6,8 +6,6 @@ import requests
 
 from datetime import datetime
 from requests.auth import HTTPBasicAuth
-from rest_framework.response import Response
-from phonenumber_field.phonenumber import PhoneNumber
 
 from notification_django.settings import env
 from .models import *

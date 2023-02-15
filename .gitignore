@@ -130,3 +130,5 @@ cython_debug/
 media/
 notes.txt
 .vscode/
+
+notification/
