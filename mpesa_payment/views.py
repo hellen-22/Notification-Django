@@ -20,7 +20,7 @@ def mpesa_payment(request):
         amount = int(request.POST['amount'])
         account_reference = 'Reference'
         transaction_desc = 'Description'
-        callback_url = request.build_absolute_uri(reverse('callback'))
+        callback_url = 'https://notification-.up.railway.app/mpesa-payment/callback'
 
         print(callback_url)
 
