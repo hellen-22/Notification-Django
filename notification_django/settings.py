@@ -32,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-#CSRF_TRUSTED_ORIGINS = ['https://b9a7-41-90-64-170.eu.ngrok.io']
+CSRF_TRUSTED_ORIGINS = ['https://flowery-protest-production.up.railway.app/']
 
 # Application definition
 
