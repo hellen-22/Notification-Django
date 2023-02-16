@@ -6,6 +6,7 @@ import requests
 
 from datetime import datetime
 from requests.auth import HTTPBasicAuth
+from requests import Response
 
 from notification_django.settings import env
 from .models import *
@@ -14,6 +15,29 @@ from .exceptions import *
 logging = logging.getLogger("default")
 
 now = datetime.now()
+
+class MpesaResponse(Response):
+	response_description = ""
+	error_code = None
+	error_message = ''
+
+
+def mpesa_response(r):
+	"""
+	Create MpesaResponse object from requests.Response object
+	
+	Arguments:
+		r (requests.Response) -- The response to convert
+	"""
+
+	r.__class__ = MpesaResponse
+	json_response = r.json()
+	r.response_description = json_response.get('ResponseDescription', '')
+	r.error_code = json_response.get('errorCode')
+	r.error_message = json_response.get('errorMessage', '')
+	return r
+
+
 
 class MpesaGateWay:
     business_shortcode = None
@@ -106,11 +130,15 @@ class MpesaGateWay:
             "TransactionDesc": transaction_desc,
         }
 
-        res = requests.post(self.checkout_url, json=req_data, headers=self.headers, timeout=30)
-        print(self.headers)
-        res_data = res.json()
-        
-        return res_data
+        try:
+            res = requests.post(self.checkout_url, json=req_data, headers=self.headers, timeout=30)
+            response = mpesa_response(res)
+
+            return response
+        except requests.exceptions.ConnectionError:
+            raise MpesaConnectionError('Connection failed')
+        except Exception as ex:
+            raise MpesaConnectionError(str(ex))
     """
         logging.info("Mpesa request data {}".format(req_data))
         logging.info("Mpesa response info {}".format(res_data))
