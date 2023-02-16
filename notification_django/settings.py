@@ -32,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['https://notification-.up.railway.app/']
+CSRF_TRUSTED_ORIGINS = ['https://notification-.up.railway.app']
 #CORS_ALLOWED_ORIGINS = ['https://flowery-protest-production.up.railway.app']
 # Application definition
 
@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'crispy_forms',
-    #'corsheaders',
+    'corsheaders',
     #'django_daraja',
 
     'notify',
