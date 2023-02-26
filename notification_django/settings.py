@@ -33,6 +33,7 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = ['https://notification-.up.railway.app']
+
 #CORS_ALLOWED_ORIGINS = ['https://flowery-protest-production.up.railway.app']
 # Application definition
 
