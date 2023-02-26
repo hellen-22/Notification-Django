@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.http import HttpResponse
+#from django_daraja.mpesa.core import MpesaClient
 from .utils import MpesaGateWay
 from .validators import *
 
@@ -19,7 +20,7 @@ def mpesa_payment(request):
         amount = int(request.POST['amount'])
         account_reference = 'Reference'
         transaction_desc = 'Description'
-        callback_url = request.build_absolute_uri(reverse('callback'))
+        callback_url = 'https://notification-.up.railway.app/mpesa-payment/callback'
 
         print(callback_url)
 
